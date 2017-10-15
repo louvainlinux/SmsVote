@@ -1,0 +1,13 @@
+Bus 003 Device 007: ID 05c6:1000 Qualcomm, Inc. Mass Storage Device
+sudo usb_modeswitch -W -v 05c6 -p 1000 -K
+http://www.draisberghof.de/usb_modeswitch/bb/viewtopic.php?f=3&t=2565
+create file to autoswitch the usb
+
+usefull command
+gammu monitor 1 : savoir ce qu'il se passe
+gammu setautonetworklogin : pour dire a gammu d'essayer de se connecter au réseau
+gammu listnetworks Belgium : lister les réseau connu par l'utilitaire
+gammu networkinfo : info réseau
+sudo journalctl -u gammu-smsd.service  --since "2017-10-12 01:35:00" : lire le fichier hournal apt de l'heure spécifié (utile, gammu burste les logs)
+gammu entersecuritycode PIN 4212 : entrer le code pin
+
