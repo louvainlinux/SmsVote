@@ -19,14 +19,15 @@ from paramiko import SSHClient
 from scp import SCPClient
 
 
-def getVote(text):
+def getVote(text, prefix):
+    text = text.replace(prefix, '')
     while('  ' in text):
         text = text.replace('  ',' ')
     if text[0] == ' ':
         text = text[1:]
     if text[-1] == ' ':
         text = text[:-1] 
-    return text[len(config.prefix)+1:]
+    return text
 
 
 def readFile(f):
@@ -61,10 +62,10 @@ def genPage(content, dest, total, prefix):
     writeFile(dest, page)
 
 
-def getAllVotes(table, isStrict, allowedEntry):
+def getAllVotes(prefix, isStrict, allowedEntry):
     mariadb_connection = mariadb.connect(host='localhost', user='pierre', password='', database='gammu')
     cursor = mariadb_connection.cursor()
-    cursor.execute("select TextDecoded from gammu."+table)
+    cursor.execute("select TextDecoded from gammu."+prefix)
     
     result = {}
 
@@ -73,7 +74,7 @@ def getAllVotes(table, isStrict, allowedEntry):
         row = cursor.fetchone ()
         if row == None:
             break
-        vote = getVote(row[0])
+        vote = getVote(row[0], prefix)
         if isStrict and vote not in allowedEntry:
             continue
         if vote in result:
@@ -93,12 +94,31 @@ def sendRemote(f, prefix):
         scp.put(f, config.remote+''.join(format(x,'02x') for x in scrypt.hash(prefix,''))+'.html')
     print("Emplacement of the contest: http://louvainlinux.org/sms-vote/"+''.join(format(x,'02x') for x in scrypt.hash(prefix,''))+'.html')
 
+def checkView(prefix):
+    mariadb_connection = mariadb.connect(host='localhost', user='pierre', password='', database='gammu')
+    cursor = mariadb_connection.cursor()
+    cursor.execute("SHOW FULL TABLES IN gammu WHERE TABLE_TYPE LIKE 'VIEW';")
+    exist = False
+
+    while(1):
+        row = cursor.fetchone()
+        if row == None:
+            break
+        if row[0] == prefix:
+            exist = True
+            break
+    if not exist:
+        # create the new view here
+        create = Template(readFile('./sql/createView.template'))
+        cursor.execute(create.substitute(name=prefix), multi=True)
+
+
 
 # fetch all the votes
 for voteEntry in config.vote:
-    # TODO check existence vue in db
+    checkView(voteEntry["prefix"])
 
-    result = getAllVotes(voteEntry["table"], voteEntry["filtered"], voteEntry["allowedEntry"])
+    result = getAllVotes(voteEntry["prefix"], voteEntry["filtered"], voteEntry["allowedEntry"])
 
     total = 0
     for key in result:
