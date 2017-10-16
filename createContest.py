@@ -12,7 +12,7 @@ from time import localtime, strftime
 import paramiko
 from paramiko import SSHClient
 from scp import SCPClient
-
+import scrypt
 import config
 
 def getVote(text):
@@ -93,4 +93,5 @@ ssh.load_system_host_keys()
 ssh.connect(hostname = 'louvainlinux.org', username = 'sms-vote', pkey = k)
 
 with SCPClient(ssh.get_transport()) as scp:
-    scp.put(config.local, config.remote+config.dest)
+    scp.put(config.local, config.remote+''.join(format(x,'02x') for x in scrypt.hash(config.prefix,''))+'.html')
+print("Emplacement of the contest: http://louvainlinux.org/sms-vote/"+''.join(format(x,'02x') for x in scrypt.hash(config.prefix,''))+'.html')
