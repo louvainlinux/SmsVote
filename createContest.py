@@ -41,7 +41,7 @@ def writeFile(f, content):
     with open(f, mode='w+') as file:
         file.write(content)
 
-def genPage(content, dest, total):
+def genPage(content, dest, total, prefix):
     sortedResult = sorted(content.items(), key=operator.itemgetter(1))
     entry = "";
     for (num, nbr) in reversed(sortedResult):
@@ -55,13 +55,13 @@ def genPage(content, dest, total):
     pageTemplate = Template(readFile("./html/index.template"))
     page = pageTemplate.substitute(
             entry=entry, 
-            prefix=config.prefix, 
+            prefix=prefix, 
             heure=strftime("le %d/%m/%Y à %H:%M:%S", localtime())
         )
     writeFile(dest, page)
 
 
-def getAllVotes(table):
+def getAllVotes(table, isStrict, allowedEntry):
     mariadb_connection = mariadb.connect(host='localhost', user='pierre', password='', database='gammu')
     cursor = mariadb_connection.cursor()
     cursor.execute("select TextDecoded from gammu."+table)
@@ -74,7 +74,7 @@ def getAllVotes(table):
         if row == None:
             break
         vote = getVote(row[0])
-        if config.isStrict and vote not in config.allowedEntry:
+        if isStrict and vote not in allowedEntry:
             continue
         if vote in result:
             result[vote] += 1
@@ -82,7 +82,7 @@ def getAllVotes(table):
             result[vote] = 1
     return result
 
-def sendRemote(f):
+def sendRemote(f, prefix):
     k = paramiko.RSAKey.from_private_key_file(config.rsakey)
 
     ssh = SSHClient()
@@ -90,19 +90,22 @@ def sendRemote(f):
     ssh.connect(hostname = 'louvainlinux.org', username = 'sms-vote', pkey = k)
 
     with SCPClient(ssh.get_transport()) as scp:
-        scp.put(f, config.remote+''.join(format(x,'02x') for x in scrypt.hash(config.prefix,''))+'.html')
-    print("Emplacement of the contest: http://louvainlinux.org/sms-vote/"+''.join(format(x,'02x') for x in scrypt.hash(config.prefix,''))+'.html')
+        scp.put(f, config.remote+''.join(format(x,'02x') for x in scrypt.hash(prefix,''))+'.html')
+    print("Emplacement of the contest: http://louvainlinux.org/sms-vote/"+''.join(format(x,'02x') for x in scrypt.hash(prefix,''))+'.html')
 
-#count the votes
-    # fetch all the votes
-result = getAllVotes(config.table)
 
-total = 0
-for key in result:
-    total += result[key]
+# fetch all the votes
+for voteEntry in config.vote:
+    # TODO check existence vue in db
 
-    #create the contest page here
-genPage(result, "out/"+config.prefix+".html", total)
+    result = getAllVotes(voteEntry["table"], voteEntry["filtered"], voteEntry["allowedEntry"])
 
-#upload to the remote serve the result
-sendRemote("out/"+config.prefix+".html")
+    total = 0
+    for key in result:
+        total += result[key]
+
+        #create the contest page here
+    genPage(result, "out/"+voteEntry["prefix"]+".html", total, voteEntry["prefix"])
+
+    #upload to the remote serve the result
+    sendRemote("out/"+voteEntry["prefix"]+".html", voteEntry["prefix"])

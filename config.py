@@ -2,6 +2,11 @@
 prefix = '24h'
 table = 'velo'
 
+vote = [
+        {"prefix" : "24h", "table" : "velo", "filtered" : False, "allowedEntry" : ["coucou"]},
+        {"prefix": "talent", "table" : "velo", "filtered": False, "allowedEntry": []}
+        ]
+
 # to filter the incomming sms
 isStrict = False
 allowedEntry = ['coucou']
