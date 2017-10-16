@@ -5,15 +5,17 @@
 
 import operator
 import os
-
-import mysql.connector as mariadb
-from string import Template
-from time import localtime, strftime
 import paramiko
-from paramiko import SSHClient
-from scp import SCPClient
 import scrypt
 import config
+
+import mysql.connector as mariadb
+
+from string import Template
+from time import localtime, strftime
+from paramiko import SSHClient
+from scp import SCPClient
+
 
 def getVote(text):
     while('  ' in text):
@@ -36,6 +38,26 @@ def writeFile(f, content):
         pass
     with open(f, mode='w+') as file:
         file.write(content)
+
+def genPage(content):
+    sortedResult = sorted(content.items(), key=operator.itemgetter(1))
+    entry = "";
+    for (num, nbr) in reversed(sortedResult):
+        entryTemplate = Template(readFile("./html/entry.template"))
+        entry+=entryTemplate.substitute(
+                title=num, 
+                percent=(nbr/total * 100)
+            )
+        entry+="\n"
+
+    pageTemplate = Template(readFile("./html/index.template"))
+    page = pageTemplate.substitute(
+            entry=entry, 
+            prefix=config.prefix, 
+            heure=strftime("le %d/%m/%Y à %H:%M:%S", localtime())
+        )
+    writeFile("./out/index.html", page)
+
 
 #count the votes
     # fetch all the votes
@@ -63,28 +85,10 @@ for key in result:
     total += result[key]
 
     #create the contest page here
-sortedResult = sorted(result.items(), key=operator.itemgetter(1))
-entry = "";
-for (num, nbr) in reversed(sortedResult):
-    entryTemplate = Template(readFile("./html/entry.template"))
-    entry+=entryTemplate.substitute(
-            title=num, 
-            percent=(nbr/total * 100)
-        )
-    entry+="\n"
-
-pageTemplate = Template(readFile("./html/index.template"))
-page = pageTemplate.substitute(
-        entry=entry, 
-        prefix=config.prefix, 
-        heure=strftime("le %d/%m/%Y à %H:%M:%S", localtime())
-    )
-writeFile("./out/index.html", page)
-
-
+genPage(result)
 
 #upload to the remote serve the result
-#pip3 install sshclient paramiko scp
+   #pip3 install sshclient paramiko scp
 
 k = paramiko.RSAKey.from_private_key_file(config.rsakey)
 
