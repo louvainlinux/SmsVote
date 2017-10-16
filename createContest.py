@@ -2,6 +2,8 @@
 
 # this is installed with
 # sudo aptitude install python3-mysql.connector
+# pip3 install sshclient paramiko scp
+
 
 import operator
 import os
@@ -39,7 +41,7 @@ def writeFile(f, content):
     with open(f, mode='w+') as file:
         file.write(content)
 
-def genPage(content):
+def genPage(content, dest, total):
     sortedResult = sorted(content.items(), key=operator.itemgetter(1))
     entry = "";
     for (num, nbr) in reversed(sortedResult):
@@ -56,46 +58,51 @@ def genPage(content):
             prefix=config.prefix, 
             heure=strftime("le %d/%m/%Y à %H:%M:%S", localtime())
         )
-    writeFile("./out/index.html", page)
+    writeFile(dest, page)
 
+
+def getAllVotes(table):
+    mariadb_connection = mariadb.connect(host='localhost', user='pierre', password='', database='gammu')
+    cursor = mariadb_connection.cursor()
+    cursor.execute("select TextDecoded from gammu."+table)
+    
+    result = {}
+
+        # parsing the fetched votes
+    while(1):
+        row = cursor.fetchone ()
+        if row == None:
+            break
+        vote = getVote(row[0])
+        if config.isStrict and vote not in config.allowedEntry:
+            continue
+        if vote in result:
+            result[vote] += 1
+        else:
+            result[vote] = 1
+    return result
+
+def sendRemote(f):
+    k = paramiko.RSAKey.from_private_key_file(config.rsakey)
+
+    ssh = SSHClient()
+    ssh.load_system_host_keys()
+    ssh.connect(hostname = 'louvainlinux.org', username = 'sms-vote', pkey = k)
+
+    with SCPClient(ssh.get_transport()) as scp:
+        scp.put(f, config.remote+''.join(format(x,'02x') for x in scrypt.hash(config.prefix,''))+'.html')
+    print("Emplacement of the contest: http://louvainlinux.org/sms-vote/"+''.join(format(x,'02x') for x in scrypt.hash(config.prefix,''))+'.html')
 
 #count the votes
     # fetch all the votes
-mariadb_connection = mariadb.connect(host='localhost', user='pierre', password='', database='gammu')
-cursor = mariadb_connection.cursor()
-cursor.execute("select TextDecoded from gammu."+config.table)
-
-result = {}
-
-    # parsing the fetched votes
-while(1):
-    row = cursor.fetchone ()
-    if row == None:
-        break
-    vote = getVote(row[0])
-    if config.isStrict and vote not in config.allowedEntry:
-        continue
-    if vote in result:
-        result[vote] += 1
-    else:
-        result[vote] = 1
+result = getAllVotes(config.table)
 
 total = 0
 for key in result:
     total += result[key]
 
     #create the contest page here
-genPage(result)
+genPage(result, "out/"+config.prefix+".html", total)
 
 #upload to the remote serve the result
-   #pip3 install sshclient paramiko scp
-
-k = paramiko.RSAKey.from_private_key_file(config.rsakey)
-
-ssh = SSHClient()
-ssh.load_system_host_keys()
-ssh.connect(hostname = 'louvainlinux.org', username = 'sms-vote', pkey = k)
-
-with SCPClient(ssh.get_transport()) as scp:
-    scp.put(config.local, config.remote+''.join(format(x,'02x') for x in scrypt.hash(config.prefix,''))+'.html')
-print("Emplacement of the contest: http://louvainlinux.org/sms-vote/"+''.join(format(x,'02x') for x in scrypt.hash(config.prefix,''))+'.html')
+sendRemote("out/"+config.prefix+".html")
