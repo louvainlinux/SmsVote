@@ -109,7 +109,7 @@ def checkView(prefix):
             break
 
     if not exist:
-        # create the new view here
+        print("Creating new view: "+prefix)
         create = Template(readFile('./sql/createView.template'))
         cursor.execute(create.substitute(name=prefix))
 
@@ -117,7 +117,7 @@ def checkView(prefix):
 
 # fetch all the votes
 for voteEntry in config.vote:
-   checkView(voteEntry["prefix"])
+    checkView(voteEntry["prefix"])
 
     result = getAllVotes(voteEntry["prefix"], voteEntry["filtered"], voteEntry["allowedEntry"])
 
