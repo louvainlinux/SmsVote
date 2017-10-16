@@ -107,16 +107,17 @@ def checkView(prefix):
         if row[0] == prefix:
             exist = True
             break
+
     if not exist:
         # create the new view here
         create = Template(readFile('./sql/createView.template'))
-        cursor.execute(create.substitute(name=prefix), multi=True)
+        cursor.execute(create.substitute(name=prefix))
 
 
 
 # fetch all the votes
 for voteEntry in config.vote:
-    checkView(voteEntry["prefix"])
+   checkView(voteEntry["prefix"])
 
     result = getAllVotes(voteEntry["prefix"], voteEntry["filtered"], voteEntry["allowedEntry"])
 

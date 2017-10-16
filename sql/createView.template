@@ -1,6 +1,4 @@
-use gammu;
-
-create view $name as 
+create view gammu.$name as 
 select ID, ReceivingDateTime, SenderNumber, TextDecoded from gammu.inbox where ID in (
 	select max(ID) from gammu.inbox 
     where ID in
