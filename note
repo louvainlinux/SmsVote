@@ -3,6 +3,8 @@ TODO:
 	init raspberry pi
 	le scp
 	replique db mariadb
+	heure de fin
+	nbr votes
 
 berry:
 	user: tuxvote
