@@ -32,11 +32,12 @@ def getVote(text, prefix):
         text = text[:-1] 
     return text
 
-
+# read a file and return all of it's content
 def readFile(f):
     with open(f, mode='r') as file:
         return file.read()
 
+# write the given content to the given file (erase mode)
 def writeFile(f, content):
     try:
         os.remove(f)
@@ -45,6 +46,7 @@ def writeFile(f, content):
     with open(f, mode='w+') as file:
         file.write(content)
 
+# generate the result page with the given content (check html/*.template to see how it's structured)
 def genPage(content, dest, total, prefix):
     sortedResult = sorted(content.items(), key=operator.itemgetter(1))
     entry = "";
@@ -118,19 +120,20 @@ def checkView(prefix):
         create = Template(readFile('./sql/createView.template'))
         cursor.execute(create.substitute(name=prefix))
 
-
-
 # fetch all the votes
 for voteEntry in config.vote:
+    # check if the  view need to be generated
     checkView(voteEntry["prefix"])
 
+    # get all the votes for a given prefix
     result = getAllVotes(voteEntry["prefix"], voteEntry["filtered"], voteEntry["allowedEntry"])
 
+    # parse all the votes
     total = 0
     for key in result:
         total += result[key]
 
-        #create the contest page here
+    #create the contest page here
     genPage(result, "out/"+voteEntry["prefix"]+".html", total, voteEntry["prefix"])
 
     #upload to the remote serve the result
