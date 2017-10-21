@@ -10,7 +10,7 @@ import os
 import paramiko
 import scrypt
 import config
-import re
+import sys
 
 import mysql.connector as mariadb
 
@@ -22,7 +22,6 @@ from scp import SCPClient
 
 # filter a given vote
 def getVote(text, prefix):
-    text = re.replace('[^a-zA-Z\d\s]',' ',text.lower())
     text = text.replace(prefix, '')
     while('  ' in text):
         text = text.replace('  ',' ')
@@ -51,14 +50,14 @@ def genPage(content, dest, total, prefix):
     sortedResult = sorted(content.items(), key=operator.itemgetter(1))
     entry = "";
     for (num, nbr) in reversed(sortedResult):
-        entryTemplate = Template(readFile("./html/entry.template"))
+        entryTemplate = Template(readFile(config.path+"html/entry.template"))
         entry+=entryTemplate.substitute(
                 title=num, 
                 percent=(nbr/total * 100)
             )
         entry+="\n"
 
-    pageTemplate = Template(readFile("./html/index.template"))
+    pageTemplate = Template(readFile(config.path+"html/index.template"))
     page = pageTemplate.substitute(
             entry=entry, 
             prefix=prefix, 
@@ -68,8 +67,6 @@ def genPage(content, dest, total, prefix):
 
 # Fetch all the votte from the mariadb and filter them
 def getAllVotes(prefix, isStrict, allowedEntry):
-    mariadb_connection = mariadb.connect(host=config.db_host, user=config.db_user, password=config.db_pass, database=config.db_db)
-    cursor = mariadb_connection.cursor()
     cursor.execute("select TextDecoded from gammu."+prefix)
     
     result = {}
@@ -98,12 +95,11 @@ def sendRemote(f, prefix):
 
     with SCPClient(ssh.get_transport()) as scp:
         scp.put(f, config.remote+''.join(format(x,'02x') for x in scrypt.hash(config.salt+prefix,''))+'.html')
-    print("Emplacement of the contest: http://louvainlinux.org/sms-vote/"+''.join(format(x,'02x') for x in scrypt.hash(config.salt+prefix,''))+'.html')
+    if debug:
+        print("Emplacement of the contest: http://louvainlinux.org/sms-vote/"+''.join(format(x,'02x') for x in scrypt.hash(config.salt+prefix,''))+'.html')
 
-# test if a view with the given prefix exist, if not, it create it
-def checkView(prefix):
-    mariadb_connection = mariadb.connect(host=config.db_host, user=config.db_user, password=config.db_pass, database=config.db_db)
-    cursor = mariadb_connection.cursor()
+# test if a view with the given name exist, if not, it create it
+def checkView(name):
     cursor.execute("SHOW FULL TABLES IN gammu WHERE TABLE_TYPE LIKE 'VIEW';")
     exist = False
 
@@ -111,14 +107,29 @@ def checkView(prefix):
         row = cursor.fetchone()
         if row == None:
             break
-        if row[0] == prefix:
+        if row[0] == name:
             exist = True
             break
 
     if not exist:
-        print("Creating new view: "+prefix)
-        create = Template(readFile('./sql/createView.template'))
-        cursor.execute(create.substitute(name=prefix))
+        print("Creating new view: "+name)
+        if name == "filter":
+            cursor.execute(readFile(config.path+"sql/createFilter.sql"))
+        else:
+            create = Template(readFile(config.path+'sql/createView.template'))
+            cursor.execute(create.substitute(name=name))
+
+# checking if an argment is present
+debug = False
+if len(sys.argv) > 1:
+    debug = True
+
+# init the db
+mariadb_connection = mariadb.connect(host=config.db_host, user=config.db_user, password=config.db_pass, database=config.db_db, buffered=True)
+cursor = mariadb_connection.cursor()
+
+# check the existence of the filtered view in the db
+checkView("filter")
 
 # fetch all the votes
 for voteEntry in config.vote:
