@@ -63,7 +63,7 @@ def genPage(content, dest, total, prefix):
 
 
 def getAllVotes(prefix, isStrict, allowedEntry):
-    mariadb_connection = mariadb.connect(host='localhost', user='pierre', password='', database='gammu')
+    mariadb_connection = mariadb.connect(host=config.db_host, user=config.db_user, password=config.db_pass, database=config.db_db)
     cursor = mariadb_connection.cursor()
     cursor.execute("select TextDecoded from gammu."+prefix)
     
@@ -91,11 +91,11 @@ def sendRemote(f, prefix):
     ssh.connect(hostname = 'louvainlinux.org', username = 'sms-vote', pkey = k)
 
     with SCPClient(ssh.get_transport()) as scp:
-        scp.put(f, config.remote+''.join(format(x,'02x') for x in scrypt.hash(prefix,''))+'.html')
-    print("Emplacement of the contest: http://louvainlinux.org/sms-vote/"+''.join(format(x,'02x') for x in scrypt.hash(prefix,''))+'.html')
+        scp.put(f, config.remote+''.join(format(x,'02x') for x in scrypt.hash(config.salt+prefix,''))+'.html')
+    print("Emplacement of the contest: http://louvainlinux.org/sms-vote/"+''.join(format(x,'02x') for x in scrypt.hash(config.salt+prefix,''))+'.html')
 
 def checkView(prefix):
-    mariadb_connection = mariadb.connect(host='localhost', user='pierre', password='', database='gammu')
+    mariadb_connection = mariadb.connect(host=config.db_host, user=config.db_user, password=config.db_pass, database=config.db_db)
     cursor = mariadb_connection.cursor()
     cursor.execute("SHOW FULL TABLES IN gammu WHERE TABLE_TYPE LIKE 'VIEW';")
     exist = False

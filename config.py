@@ -9,3 +9,10 @@ vote = [
 # to copy the generated html file to the remote server
 remote = "/var/www/louvainlinux/public/sms-vote/"
 rsakey = "/home/pierre/.ssh/id_rsa2"
+salt = 'yolo'
+
+# to connect to the db
+db_host = 'localhost' 
+db_user = 'pierre'
+db_pass = ''
+db_db = 'gammu'
