@@ -10,6 +10,7 @@ import os
 import paramiko
 import scrypt
 import config
+import re
 
 import mysql.connector as mariadb
 
@@ -19,7 +20,9 @@ from paramiko import SSHClient
 from scp import SCPClient
 
 
+# filter a given vote
 def getVote(text, prefix):
+    text = re.replace('[^a-zA-Z\d\s]',' ',text.lower())
     text = text.replace(prefix, '')
     while('  ' in text):
         text = text.replace('  ',' ')
@@ -61,7 +64,7 @@ def genPage(content, dest, total, prefix):
         )
     writeFile(dest, page)
 
-
+# Fetch all the votte from the mariadb and filter them
 def getAllVotes(prefix, isStrict, allowedEntry):
     mariadb_connection = mariadb.connect(host=config.db_host, user=config.db_user, password=config.db_pass, database=config.db_db)
     cursor = mariadb_connection.cursor()
@@ -83,6 +86,7 @@ def getAllVotes(prefix, isStrict, allowedEntry):
             result[vote] = 1
     return result
 
+# send the given page to the remote server
 def sendRemote(f, prefix):
     k = paramiko.RSAKey.from_private_key_file(config.rsakey)
 
@@ -94,6 +98,7 @@ def sendRemote(f, prefix):
         scp.put(f, config.remote+''.join(format(x,'02x') for x in scrypt.hash(config.salt+prefix,''))+'.html')
     print("Emplacement of the contest: http://louvainlinux.org/sms-vote/"+''.join(format(x,'02x') for x in scrypt.hash(config.salt+prefix,''))+'.html')
 
+# test if a view with the given prefix exist, if not, it create it
 def checkView(prefix):
     mariadb_connection = mariadb.connect(host=config.db_host, user=config.db_user, password=config.db_pass, database=config.db_db)
     cursor = mariadb_connection.cursor()
