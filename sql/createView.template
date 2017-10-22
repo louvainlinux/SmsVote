@@ -3,7 +3,7 @@ select ID, ReceivingDateTime, SenderNumber, TextDecoded from gammu.filter where 
 	select max(ID) from gammu.filter
     where ID in
 		(
-			select ID from gammu.filter where TextDecoded REGEXP  '^(\ *2$name.*)'
+			select ID from gammu.filter where TextDecoded REGEXP  '^(\ *$name.*)'
 		)
 	group by SenderNumber
 );
