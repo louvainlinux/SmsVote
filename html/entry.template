@@ -1,5 +1,5 @@
 <strong>$title</strong>
-    <span class="pull-right">$percent%</span>
+<span class="pull-right">$percent% - $nbr</span>
     <div class="progress progress-striped active">
       <div class="progress-bar" style="width: $percent%;"></div>
     </div>

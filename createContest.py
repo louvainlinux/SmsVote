@@ -52,6 +52,7 @@ def genPage(content, dest, total, prefix):
     for (num, nbr) in reversed(sortedResult):
         entryTemplate = Template(readFile(config.path+"html/entry.template"))
         entry+=entryTemplate.substitute(
+                nbr=nbr,
                 title=num, 
                 percent=(nbr/total * 100)
             )
