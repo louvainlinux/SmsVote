@@ -1,10 +1,6 @@
 TODO:
-	systemd services - en théorie bon, à tester sur le pi
-	init raspberry pi
-	le scp
 	replique db mariadb
 	heure de fin
-	nbr votes
 
 berry:
 	user: tuxvote
