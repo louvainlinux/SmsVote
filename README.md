@@ -2,7 +2,7 @@
 
 Salut a toi, jeune padawan ! Si tu est pressé, regarde la section "vite steu plé" pour tout mettre en place en 3 minutes. SI tu a le temps ou que tout est cassé, regarde après.
 
-## Infos utils
+## Infos utiles
 
 - Numéro des votes: 0499/40.93.44
 - Format des votes: 
