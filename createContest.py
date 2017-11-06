@@ -7,6 +7,7 @@
 
 import operator
 import os
+import os.path
 import paramiko
 import scrypt
 import config
@@ -120,10 +121,17 @@ def checkView(name):
             create = Template(readFile(config.path+'sql/createView.template'))
             cursor.execute(create.substitute(name=name))
 
+## Start of the program (en of the utility functions)
+
 # checking if an argment is present
 debug = False
 if len(sys.argv) > 1:
     debug = True
+
+
+# test if the out directory exist - needed but not included in the git
+if not os.path.exists('out'):
+    os.makedirs('out')
 
 # init the db
 mariadb_connection = mariadb.connect(host=config.db_host, user=config.db_user, password=config.db_pass, database=config.db_db, buffered=True)
