@@ -21,9 +21,11 @@ Salut a toi, jeune padawan ! Si tu est pressé, regarde la section "vite steu pl
 7. Va dans la dossier `SMS-vote` et édite la fichier config.py
 8. Si tu veux effacer tout les aciens sondages, remplace l'entrée vote par ceci: `vote = []`
 9. Pour ajouter un sondage, ajoute une entrée comme ceci: `{"prefix"="tonPrefix", "filtered":filtre, "allowedEntry":["Entrée 1","Entrée 2","Entrée 3","..."]}` en remplacant tonPrefix par ce que tu veux, mettant filtre a true si tu veux limiter les possibilité et liste dans allowedEntry les entrée autorisée. Par exemple, pour le vote folklo des 24, la ligne resemblait à ca: 
+
 `vote = [
         {"prefix" : "folklo", "filtered": True, "allowedEntry": ["1","4","6","8","9","11","12","13","14","15","16","17","18","20","21","22","25","27","28","30","31","32","33","34","36","37","39","42","43","45","50","53","57","59","61","62","64","66","67","68","70","71","74"]}
         ]`
+
 10. Exécute `./createConstest.py out` et prend note de l'url des résultats.
 11. Fini !
 
