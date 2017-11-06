@@ -29,3 +29,18 @@ Salut a toi, jeune padawan ! Si tu est pressé, regarde la section "vite steu pl
 10. Exécute `./createConstest.py out` et prend note de l'url des résultats.
 11. Fini !
 
+
+## J'ai tout cassé et je dois tout réinstaller: le guide
+
+Pour installer une système a partir de rien:
+1. Installer raspbian (testé avec stretch) headless et activer le ssh
+2. Installer avec apt-get: gammu, gammu-smsd, mariadb, usbswitch, python3, python3-pip, python3-mysql.connector
+3. Installer avec pip3: sshclient paramiko scp scrypt
+4. Cloner ce repo ci
+5. Exécuter sur la db le script sql/createDBGammu.sql 
+6. Ajouter une crontab pour que le script createContest.py soit exécuté touts les 15 minutes
+7. Ajouter l'utilisateur db dans le fichier config
+8. Ajouter la config de la db dans le fichier config
+9. Créer un certificat RSA et le mettre sur le serveur du `louvainlinux.org` pour permettre au pi de se connecter sur le serveru du site du linux.
+10. Mettre n'importe quoi dans le champ salt et ne pas changer après
+11. Faire toutes les étapes de la section précédente pour créer un sondage.
