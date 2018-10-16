@@ -121,7 +121,23 @@ def checkView(name):
             create = Template(readFile(config.path+'sql/createView.template'))
             cursor.execute(create.substitute(name=name))
 
-## Start of the program (en of the utility functions)
+# test if a view with the given name exist, if not, it create it
+def deleteView(name):
+    cursor.execute("SHOW FULL TABLES IN gammu WHERE TABLE_TYPE LIKE 'VIEW';")
+    exist = False
+
+    while(1):
+        row = cursor.fetchone()
+        if row == None:
+            break
+        if row[0] == name:
+            exist = True
+            break
+
+    if exist:
+        cursor.execute("DELETE FROM gammu WHERE where ID in ( select ID from gammu.filter where TextDecoded REGEXP  '^(\ *%s.*)' );" % name)
+
+## Start of the program (end of the utility functions)
 
 # checking if an argment is present
 debug = False
